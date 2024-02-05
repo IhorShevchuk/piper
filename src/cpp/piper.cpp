@@ -6,7 +6,10 @@
 #include <stdexcept>
 
 #include <espeak-ng/speak_lib.h>
-#include <onnxruntime_cxx_api.h>
+#include <onnxruntime/onnxruntime_cxx_api.h>
+#ifdef __APPLE__
+#include <onnxruntime/coreml_provider_factory.h>
+#endif
 #include <spdlog/spdlog.h>
 
 #include "json.hpp"
@@ -288,6 +291,10 @@ void loadModel(std::string modelPath, ModelSession &session, bool useCuda) {
   session.options.DisableCpuMemArena();
   session.options.DisableMemPattern();
   session.options.DisableProfiling();
+
+#ifdef __APPLE__
+  Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CoreML(session.options, 0));
+#endif
 
   auto startTime = std::chrono::steady_clock::now();
 
